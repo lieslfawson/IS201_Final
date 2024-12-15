@@ -1,0 +1,31 @@
+body{
+    background-color: #ffb2a5;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.header{
+    top: 5px;
+    left: 5px;
+    right: 5px;
+    height: 20px;
+    z-index: 2;
+    border-bottom: solid 1px #000;
+}
+
+.mainbody{
+    top: 175px;
+    left: 114px;
+    right: 114px;
+    bottom: 39px;
+    padding-right: 5px;
+}
+
+.footer { 
+    bottom: 5px; 
+    left: 5px; 
+    right: 5px; 
+    height: 20px; 
+    z-index: 1; 
+    border-top: solid 1px #000; 
+    color: #444
+}

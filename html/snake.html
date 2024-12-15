@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Snake Game</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: black;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+    .navbar {
+      width: 100%;
+      background-color: white;
+      color: black;
+      text-align: center;
+      padding: 10px;
+      position: fixed;
+      top: 0;
+      z-index: 1000;
+    }
+    .navbar a {
+      color: black;
+      text-decoration: none;
+      padding: 0 15px;
+    }
+    canvas {
+      border: 1px solid white;
+      display: none;
+      margin-top: 60px; /* Adjust for navbar height */
+    }
+    #startButton {
+      padding: 10px 20px;
+      background-color: white;
+      color: black;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      margin-top: 60px; /* Adjust for navbar height */
+    }
+  </style>
+</head>
+<body>
+  <div class="navbar">
+    <a href="../index.html">Back to Home Page</a>
+    <a href="../html/ballet.html">Back to Ballet Page</a>
+  </div>
+  <button id="startButton">Start Game</button>
+  <canvas width="400" height="400" id="game"></canvas>
+  <script>
+    var canvas = document.getElementById('game');
+    var context = canvas.getContext('2d');
+    var startButton = document.getElementById('startButton');
+
+    var grid = 16;
+    var count = 0;
+    var score = 0;
+    var gameRunning = false;
+
+    var snake = {
+      x: 160,
+      y: 160,
+      dx: grid,
+      dy: 0,
+      cells: [],
+      maxCells: 4
+    };
+    var apple = {
+      x: getRandomInt(0, 25) * grid,
+      y: getRandomInt(0, 25) * grid
+    };
+
+    function getRandomInt(min, max) {
+      return Math.floor(Math.random() * (max - min)) + min;
+    }
+
+    function getRandomApplePosition() {
+      let x, y;
+      do {
+        x = getRandomInt(0, 25) * grid;
+        y = getRandomInt(0, 25) * grid;
+      } while (snake.cells.some(cell => cell.x === x && cell.y === y));
+      return { x, y };
+    }
+
+    function resetGame() {
+      snake.x = 160;
+      snake.y = 160;
+      snake.cells = [];
+      snake.maxCells = 4;
+      snake.dx = grid;
+      snake.dy = 0;
+      score = 0;
+      apple = getRandomApplePosition();
+      gameRunning = false;
+      startButton.style.display = 'block';
+      canvas.style.display = 'none';
+    }
+
+    function gameOver() {
+      alert("Game Over! Your score: " + score);
+      resetGame();
+    }
+
+    function loop() {
+      if (gameRunning) {
+        requestAnimationFrame(loop);
+      }
+
+      if (++count < 4) {
+        return;
+      }
+
+      count = 0;
+      context.clearRect(0, 0, canvas.width, canvas.height);
+
+      snake.x += snake.dx;
+      snake.y += snake.dy;
+
+      if (snake.x < 0 || snake.x >= canvas.width || snake.y < 0 || snake.y >= canvas.height) {
+        gameOver();
+        return;
+      }
+
+      snake.cells.unshift({x: snake.x, y: snake.y});
+
+      if (snake.cells.length > snake.maxCells) {
+        snake.cells.pop();
+      }
+
+      context.fillStyle = 'red';
+      context.fillRect(apple.x, apple.y, grid-1, grid-1);
+
+      context.fillStyle = 'green';
+      snake.cells.forEach(function(cell, index) {
+        context.fillRect(cell.x, cell.y, grid-1, grid-1);
+
+        if (cell.x === apple.x && cell.y === apple.y) {
+          snake.maxCells++;
+          score++;
+          apple = getRandomApplePosition();
+        }
+
+        for (var i = index + 1; i < snake.cells.length; i++) {
+          if (cell.x === snake.cells[i].x && cell.y === snake.cells[i].y) {
+            gameOver();
+            return;
+          }
+        }
+      });
+
+      context.fillStyle = 'white';
+      context.fillText('Score: ' + score, 10, 20);
+    }
+
+    document.addEventListener('keydown', function(e) {
+      if ([37, 38, 39, 40].indexOf(e.which) > -1) {
+        e.preventDefault();
+      }
+      if (e.which === 37 && snake.dx === 0) {
+        snake.dx = -grid;
+        snake.dy = 0;
+      } else if (e.which === 38 && snake.dy === 0) {
+        snake.dy = -grid;
+        snake.dx = 0;
+      } else if (e.which === 39 && snake.dx === 0) {
+        snake.dx = grid;
+        snake.dy = 0;
+      } else if (e.which === 40 && snake.dy === 0) {
+        snake.dy = grid;
+        snake.dx = 0;
+      }
+    });
+
+    canvas.addEventListener('touchstart', function(e) {
+      var touch = e.touches[0];
+      var rect = canvas.getBoundingClientRect();
+      var touchX = touch.clientX - rect.left;
+      var touchY = touch.clientY - rect.top;
+      var direction = getSwipeDirection(touchX, touchY);
+      
+      if (direction === 'left' && snake.dx === 0) {
+        snake.dx = -grid;
+        snake.dy = 0;
+      } else if (direction === 'up' && snake.dy === 0) {
+        snake.dy = -grid;
+        snake.dx = 0;
+      } else if (direction === 'right' && snake.dx === 0) {
+        snake.dx = grid;
+        snake.dy = 0;
+      } else if (direction === 'down' && snake.dy === 0) {
+        snake.dy = grid;
+        snake.dx = 0;
+      }
+    });
+
+    function getSwipeDirection(x, y) {
+      var middleX = canvas.width / 2;
+      var middleY = canvas.height / 2;
+      var diffX = x - middleX;
+      var diffY = y - middleY;
+
+      if (Math.abs(diffX) > Math.abs(diffY)) {
+        return diffX > 0 ? 'right' : 'left';
+      } else {
+        return diffY > 0 ? 'down' : 'up';
+      }
+    }
+
+    startButton.addEventListener('click', function() {
+      startButton.style.display = 'none';
+      canvas.style.display = 'block';
+      gameRunning = true;
+      requestAnimationFrame(loop);
+    });
+  </script>
+</body>
+</html>
